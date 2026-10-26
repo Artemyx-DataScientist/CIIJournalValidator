@@ -1,0 +1,179 @@
+name: Publish authoritative v3 validator
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Immutable validator release tag
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: validator-pages-release
+  cancel-in-progress: false
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require the selected public distribution repository
+        shell: bash
+        run: |
+          test "$GITHUB_REPOSITORY" = "Artemyx-DataScientist/CIIJournalValidator" || {
+            echo '::error::Publish from the authoritative CIIJournalValidator repository. This private-repository copy is the maintained workflow source.'
+            exit 1
+          }
+          if gh release view "$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo '::error::This release already exists; choose a new immutable version.'
+            exit 1
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install independent browser verifier
+        run: |
+          npm install --no-save --package-lock=false @playwright/test@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Build one public bundle
+        shell: pwsh
+        run: ./release_validator.ps1 -Version $env:RELEASE_VERSION -ValidatorSource . -KeyringSource ./keyring.json
+      - name: Verify extracted offline ZIP with all outside origins blocked
+        shell: bash
+        run: |
+          unzip -q "validator_release/$RELEASE_VERSION.zip" -d _offline_zip
+          export VALIDATOR_BUNDLE="$PWD/_offline_zip"
+          export VALIDATOR_VECTOR="$PWD/.github/offline-vector.json"
+          cat > _offline_check.mjs <<'JS'
+          import { chromium, expect } from '@playwright/test';
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import http from 'node:http';
+          import assert from 'node:assert/strict';
+          const root = process.env.VALIDATOR_BUNDLE;
+          const vector = JSON.parse(fs.readFileSync(process.env.VALIDATOR_VECTOR, 'utf8'));
+          const allowed = new Set(['index.html','noble-ed25519.js','public_key.txt','keyring.json','manifest.json','SHA256SUMS.txt']);
+          const server = http.createServer((req,res) => {
+            const name = new URL(req.url, 'http://localhost').pathname.slice(1) || 'index.html';
+            if (!allowed.has(name)) { res.writeHead(404).end(); return; }
+            res.setHeader('Content-Type', name.endsWith('.js') ? 'text/javascript' : name.endsWith('.html') ? 'text/html; charset=utf-8' : 'application/json');
+            res.end(fs.readFileSync(path.join(root,name)));
+          });
+          await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
+          const base = `http://127.0.0.1:${server.address().port}`;
+          let browser;
+          try {
+            browser = await chromium.launch({headless:true});
+            const context = await browser.newContext({serviceWorkers:'block'});
+            const external = [];
+            await context.route('**/*', route => {
+              if (new URL(route.request().url()).origin === base) return route.continue();
+              external.push(route.request().url()); return route.abort();
+            });
+            const page = await context.newPage();
+            const errors = [];
+            page.on('pageerror', error => errors.push(error.message));
+            let caseNumber = 0;
+            const open = async (payload,signature) => {
+              await page.goto(`${base}/index.html?case=${++caseNumber}#${encodeURIComponent(payload+'.'+signature)}`);
+              await page.locator('#status[aria-busy="false"]').waitFor();
+            };
+            await open(vector.payload,vector.signature);
+            await expect(page.locator('#status')).toHaveClass(/ok/);
+            await expect(page.locator('#status')).toContainText('без канонического снимка');
+            await page.locator('#snapshot-input').fill(JSON.stringify(vector.snapshot));
+            await page.locator('#verify-snapshot-btn').click();
+            await expect(page.locator('#snapshot-result')).toContainText('Снимок полностью совпадает');
+            await page.locator('#snapshot-input').fill(JSON.stringify({...vector.snapshot, tampered:true}));
+            await page.locator('#verify-snapshot-btn').click();
+            await expect(page.locator('#snapshot-result')).toContainText('Несовпадение');
+            await page.locator('#snapshot-input').fill('<svg/onload=x=1>');
+            await page.locator('#verify-snapshot-btn').click();
+            await expect(page.locator('#snapshot-result')).toContainText('Синтаксическая ошибка JSON');
+            await page.evaluate(() => new Promise(requestAnimationFrame));
+            assert.equal(await page.evaluate(() => typeof window.x),'undefined','Snapshot error text must not execute HTML');
+            await open(vector.payload, vector.signature.slice(0,-4)+'AAAA');
+            await expect(page.locator('#status')).toHaveClass(/fail/);
+            if (vector.unknownKidPayload) {
+              await open(vector.unknownKidPayload, vector.unknownKidSignature);
+              await expect(page.locator('#status')).toHaveClass(/fail/);
+            }
+            assert.equal(external.length,0,'External requests are forbidden');
+            assert.deepEqual(errors,[],'Browser errors are forbidden');
+            console.log(JSON.stringify({signature:true,snapshot:true,tamperRejected:true,unknownKidRejected:!!vector.unknownKidPayload,externalRequests:external.length}));
+          } finally {
+            if (browser) await browser.close();
+            await new Promise(resolve => server.close(resolve));
+          }
+          JS
+          node _offline_check.mjs
+          cd "validator_release/$RELEASE_VERSION"
+          sha256sum -c SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tested-validator-bundle
+          path: validator_release/
+  publish:
+    needs: build-and-test
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: tested-validator-bundle
+          path: validator_release/
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: validator_release/${{ inputs.version }}
+      - name: Deploy the tested bundle
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Publish the identical tagged ZIP
+        shell: bash
+        run: |
+          test '${{ steps.deployment.outputs.page_url }}' = 'https://artemyx-datascientist.github.io/CIIJournalValidator/'
+          gh release create "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" "validator_release/$RELEASE_VERSION.zip" --target "$GITHUB_SHA" --title "Validator $RELEASE_VERSION" --notes 'Public v3 validator. ZIP and Pages contain the same tested files. Cryptographic validity does not establish wet ink or an instruction event.'
+      - name: Witness live Pages and Release parity
+        shell: bash
+        run: |
+          mkdir _downloaded
+          gh release download "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" --pattern '*.zip' --dir _downloaded
+          cmp "validator_release/$RELEASE_VERSION.zip" "_downloaded/$RELEASE_VERSION.zip"
+          python3 - <<'PY'
+          import os,time,hashlib,urllib.request,json
+          from pathlib import Path
+          version=os.environ['RELEASE_VERSION']
+          root=Path('validator_release')/version
+          base='https://artemyx-datascientist.github.io/CIIJournalValidator/'
+          names=['index.html','noble-ed25519.js','public_key.txt','keyring.json','manifest.json','SHA256SUMS.txt']
+          for attempt in range(20):
+              try:
+                  hashes={}
+                  for name in names:
+                      with urllib.request.urlopen(base+name+'?release='+version,timeout=15) as response:
+                          remote=response.read()
+                      assert remote==(root/name).read_bytes(), 'Published asset mismatch: '+name
+                      hashes[name]=hashlib.sha256(remote).hexdigest()
+                  break
+              except Exception:
+                  if attempt==19: raise
+                  time.sleep(3)
+          receipt={'version':version,'sourceCommit':os.environ['GITHUB_SHA'],'pages':base,'sha256':hashes,'zipSha256':hashlib.sha256((root.parent/(version+'.zip')).read_bytes()).hexdigest()}
+          Path('publication-receipt.json').write_text(json.dumps(receipt,indent=2))
+          print(json.dumps(receipt))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: validator-publication-receipt
+          path: publication-receipt.json

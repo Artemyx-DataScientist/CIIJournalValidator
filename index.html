@@ -9,7 +9,10 @@
         color-scheme: light dark;
         --accent: #2d6cdf;
         --danger: #d7263d;
-        --muted: #6c757d;
+        --draft: #d7a406;
+        --muted: #8b949e;
+        --border: rgba(255, 255, 255, 0.12);
+        --bg-card: rgba(255, 255, 255, 0.05);
         font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       }
 
@@ -24,8 +27,8 @@
 
       .card {
         max-width: 960px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
         border-radius: 14px;
         padding: 1.5rem;
         box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
@@ -43,6 +46,31 @@
         color: var(--muted);
       }
 
+      .legal-notice {
+        margin: 1rem 0;
+        padding: 0.85rem 1rem;
+        background: rgba(45, 108, 223, 0.12);
+        border: 1px solid rgba(45, 108, 223, 0.35);
+        border-radius: 10px;
+        font-size: 0.88rem;
+        color: #c0d8ff;
+      }
+
+      .legal-notice h4 {
+        margin: 0 0 0.4rem;
+        font-size: 0.95rem;
+        color: #ffffff;
+      }
+
+      .legal-notice ul {
+        margin: 0;
+        padding-left: 1.2rem;
+      }
+
+      .legal-notice li {
+        margin-bottom: 0.25rem;
+      }
+
       .status {
         margin: 1rem 0;
         padding: 1rem;
@@ -51,6 +79,7 @@
         align-items: center;
         gap: 0.75rem;
         font-weight: 600;
+        font-size: 1.05rem;
       }
 
       .status.ok {
@@ -65,15 +94,21 @@
         color: #ff9aa2;
       }
 
+      .status.draft {
+        background: rgba(255, 209, 102, 0.2);
+        border: 1px solid rgba(255, 209, 102, 0.4);
+        color: #ffd166;
+      }
+
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 1rem;
       }
 
       .info-block {
         background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border);
         padding: 1rem;
         border-radius: 12px;
       }
@@ -86,7 +121,7 @@
 
       .muted {
         color: var(--muted);
-        font-size: 0.95rem;
+        font-size: 0.92rem;
       }
 
       ul {
@@ -97,10 +132,18 @@
       .code-box {
         font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
         word-break: break-all;
-        background: rgba(0, 0, 0, 0.2);
+        background: rgba(0, 0, 0, 0.25);
         border: 1px dashed rgba(255, 255, 255, 0.2);
         border-radius: 10px;
         padding: 0.75rem;
+        font-size: 0.88rem;
+      }
+
+      .code-box-small {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        word-break: break-all;
+        font-size: 0.85rem;
+        color: #e6edf3;
       }
 
       .badge {
@@ -111,72 +154,150 @@
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.15);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
       }
 
       .warning {
         color: #ffd166;
         margin-top: 0.5rem;
       }
+
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: #f7f8fb;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        padding: 0.6rem;
+        font-size: 0.85rem;
+        resize: vertical;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      .btn {
+        padding: 0.45rem 0.9rem;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+
+      .btn:hover {
+        background: #2358b8;
+      }
     </style>
   </head>
   <body>
     <div class="card">
-      <h1>Paper Blockchain — офлайн-валидация</h1>
+      <h1>Проверка QR-журнала</h1>
       <p class="description">
-        Вставьте или отсканируйте QR со страницы журнала: данные берутся из hash-фрагмента URL.
-        Подпись проверяется на стороне браузера, без запросов к серверу.
+        Вставьте или откройте ссылку из QR-кода страницы журнала. Криптографическая подпись проверяется автономно в браузере.
       </p>
 
-      <div id="status" class="status fail">Ожидание данных из QR…</div>
+      <div class="legal-notice">
+        <h4>Правовые ограничения верификации</h4>
+        <ul>
+          <li>Электронная подпись подтверждает целостность цифрового обязательства и порядок в хэш-цепочке тома.</li>
+          <li>Проверка НЕ является подтверждением фактического нанесения физических рукописных подписей работников на бумаге.</li>
+          <li>Проверка НЕ подтверждает астрономическое время создания листа (доверенный штамп времени TSA не используется).</li>
+        </ul>
+      </div>
+
+      <div id="status" class="status fail">Ожидание данных из QR...</div>
 
       <div class="grid">
         <div class="info-block">
-          <h3>Корневой ключ</h3>
-          <p class="muted">Сверьте этот ключ с титульным листом бумажного тома.</p>
+          <h3>Ключ проверки</h3>
+          <p class="muted">Сверьте идентификатор и открытый ключ с титульным листом бумажного тома.</p>
+          <div class="muted" style="margin-bottom: 0.3rem;">ID ключа (kid): <strong id="key-id">—</strong></div>
           <div id="root-key" class="code-box">—</div>
           <div id="root-key-warning" class="warning" hidden>
-            Ключ не найден рядом с файлом <code>public_key.txt</code>. Загрузите его перед проверкой.
+            Рядом с валидатором не найден файл <code>public_key.txt</code>. Загрузите его перед проверкой.
           </div>
         </div>
+
         <div class="info-block">
-          <h3>Данные листа</h3>
-          <p class="muted">Извлечены из QR payload.</p>
+          <h3>Данные обязательства листа</h3>
+          <p class="muted">Извлечены из подписанного QR-кода.</p>
           <div class="badge" id="payload-version">—</div>
           <div class="muted">Том: <strong id="volume-id">—</strong> | Лист: <strong id="sheet-no">—</strong></div>
-          <div class="muted">Тип инструктажа: <strong id="briefing-type">—</strong></div>
-          <div class="muted">Дата: <strong id="sheet-date">—</strong></div>
-          <div class="muted">Хэш пред. листа: <strong id="prev-hash">—</strong></div>
+          <div id="v2-fields" class="muted" hidden>
+            <div>Тип инструктажа: <strong id="briefing-type">—</strong></div>
+            <div>Дата: <strong id="sheet-date">—</strong></div>
+          </div>
+          <div class="muted" style="margin-top: 0.4rem;">
+            Хэш записи (record_hash):<br />
+            <span id="record-hash" class="code-box-small">—</span>
+          </div>
+          <div class="muted" style="margin-top: 0.4rem;">
+            Хэш предыдущего листа (prev_hash):<br />
+            <span id="prev-hash" class="code-box-small">—</span>
+          </div>
         </div>
       </div>
 
       <div class="info-block" style="margin-top: 1rem">
+        <h3>Сверка канонического снимка (JSON)</h3>
+        <p class="muted">
+          В схеме v3 персональные данные исключены из QR-кода для защиты ПДн (SEC-02). Для проверки соответствия текста листа подписанному обязательству вставьте канонический JSON-снимок или загрузите файл.
+        </p>
+        <textarea id="snapshot-input" rows="4" placeholder="Вставьте JSON канонического снимка листа..."></textarea>
+        <div style="margin-top: 0.5rem; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+          <input type="file" id="snapshot-file" accept=".json,application/json" style="font-size: 0.85rem;" />
+          <button id="verify-snapshot-btn" class="btn" type="button">Сверить снимок</button>
+        </div>
+        <div id="snapshot-result" class="muted" style="margin-top: 0.6rem;">—</div>
+      </div>
+
+      <div class="info-block" style="margin-top: 1rem">
         <h3>Участники</h3>
-        <p class="muted">Фамилия и инициалы, которые были зашифрованы в QR.</p>
+        <p class="muted" id="participants-hint">Список участников из QR (для исторических документов v2).</p>
         <ul id="participants"></ul>
       </div>
 
       <div class="info-block" style="margin-top: 1rem">
         <h3>Технические детали</h3>
-        <p class="muted">Payload + подпись из QR:</p>
+        <p class="muted">Необработанная полезная нагрузка и цифровая подпись из QR-кода.</p>
         <div class="code-box" id="raw-fragment">—</div>
       </div>
     </div>
 
     <script type="module">
-      import * as ed from 'https://cdn.jsdelivr.net/npm/@noble/ed25519@2.0.0/+esm';
+      import * as ed from './noble-ed25519.js';
 
       const statusEl = document.getElementById('status');
       const rootKeyEl = document.getElementById('root-key');
       const rootKeyWarningEl = document.getElementById('root-key-warning');
+      const keyIdEl = document.getElementById('key-id');
       const payloadVersionEl = document.getElementById('payload-version');
       const volumeIdEl = document.getElementById('volume-id');
       const sheetNoEl = document.getElementById('sheet-no');
+      const recordHashEl = document.getElementById('record-hash');
+      const prevHashEl = document.getElementById('prev-hash');
+      const v2FieldsEl = document.getElementById('v2-fields');
       const briefingTypeEl = document.getElementById('briefing-type');
       const sheetDateEl = document.getElementById('sheet-date');
-      const prevHashEl = document.getElementById('prev-hash');
       const participantsEl = document.getElementById('participants');
+      const participantsHintEl = document.getElementById('participants-hint');
       const fragmentBoxEl = document.getElementById('raw-fragment');
+
+      const snapshotInputEl = document.getElementById('snapshot-input');
+      const snapshotFileEl = document.getElementById('snapshot-file');
+      const verifySnapshotBtn = document.getElementById('verify-snapshot-btn');
+      const snapshotResultEl = document.getElementById('snapshot-result');
+
+      let currentParsedPayload = null;
+      let signatureVerified = false;
 
       function decodeBase64Url(data) {
         const normalized = data.replace(/-/g, '+').replace(/_/g, '/');
@@ -185,23 +306,69 @@
         return Uint8Array.from(binary, (c) => c.charCodeAt(0));
       }
 
-      async function loadRootKey() {
+      async function loadKeyring() {
+        const keyringMap = new Map();
+        try {
+          const response = await fetch('keyring.json');
+          if (response.ok) {
+            const data = await response.json();
+            if (data && Array.isArray(data.keys)) {
+              data.keys.forEach((k) => {
+                if (k.kid && k.public_key_base64) {
+                  keyringMap.set(k.kid, k);
+                }
+              });
+            }
+          }
+        } catch (error) {
+          // keyring.json optional fallback
+        }
+
         try {
           const response = await fetch('public_key.txt');
           if (response.ok) {
-            return (await response.text()).trim();
+            const rootKey = (await response.text()).trim();
+            if (rootKey && !keyringMap.has('root')) {
+              keyringMap.set('root', {
+                kid: 'root',
+                public_key_base64: rootKey,
+                status: 'active',
+              });
+            }
           }
         } catch (error) {
           console.warn('Cannot load root key file', error);
         }
-        rootKeyWarningEl.hidden = false;
-        return '';
+
+        if (keyringMap.size === 0) {
+          rootKeyWarningEl.hidden = false;
+        }
+        return keyringMap;
+      }
+
+      export function canonicalizeJson(val) {
+        if (val === null || typeof val !== 'object') {
+          return JSON.stringify(val);
+        }
+        if (Array.isArray(val)) {
+          return '[' + val.map(canonicalizeJson).join(',') + ']';
+        }
+        const keys = Object.keys(val).sort();
+        const pairs = keys.map((k) => JSON.stringify(k) + ':' + canonicalizeJson(val[k]));
+        return '{' + pairs.join(',') + '}';
+      }
+
+      export async function computeSha256Hex(str) {
+        const bytes = new TextEncoder().encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
       }
 
       function renderParticipants(list) {
         participantsEl.innerHTML = '';
         if (!list.length) {
-          participantsEl.innerHTML = '<li class="muted">Нет данных</li>';
+          participantsEl.innerHTML = '<li class="muted">Данные отсутствуют в полезной нагрузке QR</li>';
           return;
         }
         list.forEach((item) => {
@@ -211,9 +378,11 @@
         });
       }
 
-      function renderStatus(ok, message) {
-        statusEl.classList.toggle('ok', ok);
-        statusEl.classList.toggle('fail', !ok);
+      function renderStatus(state, message) {
+        statusEl.setAttribute('aria-busy', 'false');
+        statusEl.classList.toggle('ok', state === 'ok');
+        statusEl.classList.toggle('fail', state === 'fail');
+        statusEl.classList.toggle('draft', state === 'draft');
         statusEl.textContent = message;
       }
 
@@ -221,39 +390,83 @@
         fragmentBoxEl.textContent = fragment || '—';
       }
 
-      function parsePayload(payload) {
-        const parts = payload.split('|');
-        const version = parts[0] || '—';
+      function normalizeVersion(version) {
+        if (version.startsWith('intro_journal:v3-draft') || version.startsWith('v3-draft')) {
+          return { raw: version, major: 3, kind: 'draft' };
+        }
+        if (version.startsWith('intro_journal:v3') || version.startsWith('v3')) {
+          return { raw: version, major: 3, kind: 'final' };
+        }
+        if (version.startsWith('intro_journal:v2-draft') || version.startsWith('v2-draft')) {
+          return { raw: version, major: 2, kind: 'draft' };
+        }
+        if (version.startsWith('intro_journal:v2') || version.startsWith('v2')) {
+          return { raw: version, major: 2, kind: 'final' };
+        }
+        const isDraft = version.includes('-draft');
+        return { raw: version, major: 0, kind: isDraft ? 'draft' : 'legacy' };
+      }
 
-        if (version === 'v2') {
-          const [, volumeId, sheetNo, briefingType, date, prevHashShort, namesList] = parts;
+      export function parsePayload(payload) {
+        const parts = payload.split('|');
+        const normalizedVersion = normalizeVersion(parts[0] || '—');
+
+        if (normalizedVersion.major === 3 || parts.length === 6) {
+          const [, volumeId, sheetNo, recordHash, prevHash, kid] = parts;
           return {
-            version,
+            version: normalizedVersion.raw,
+            versionKind: normalizedVersion.kind,
+            major: 3,
             volumeId: volumeId || '—',
             sheetNo: sheetNo || '—',
+            recordHash: recordHash || '—',
+            prevHash: prevHash || '—',
+            keyId: kid || 'root',
+            briefingType: '—',
+            date: '—',
+            participants: [],
+          };
+        }
+
+        if (normalizedVersion.major === 2 || parts.length === 7) {
+          const [, volumeId, sheetNo, briefingType, date, prevHashShort, namesList] = parts;
+          return {
+            version: normalizedVersion.raw,
+            versionKind: normalizedVersion.kind,
+            major: 2,
+            volumeId: volumeId || '—',
+            sheetNo: sheetNo || '—',
+            recordHash: '—',
+            prevHash: prevHashShort || '—',
+            keyId: 'root',
             briefingType: briefingType || '—',
             date: date || '—',
-            prevHashShort: prevHashShort || '—',
             participants: namesList ? namesList.split(',').filter(Boolean) : [],
           };
         }
 
+        // Fallback legacy (6 parts without briefingType)
         const [, volumeId, sheetNo, date, prevHashShort, namesList] = parts;
         return {
-          version,
+          version: normalizedVersion.raw,
+          versionKind: normalizedVersion.kind,
+          major: 1,
           volumeId: volumeId || '—',
           sheetNo: sheetNo || '—',
+          recordHash: '—',
+          prevHash: prevHashShort || '—',
+          keyId: 'root',
           briefingType: '—',
           date: date || '—',
-          prevHashShort: prevHashShort || '—',
           participants: namesList ? namesList.split(',').filter(Boolean) : [],
         };
       }
 
       async function verify() {
+        statusEl.setAttribute('aria-busy', 'true');
         const hashRaw = window.location.hash.slice(1);
         if (!hashRaw) {
-          renderStatus(false, 'Вставьте ссылку из QR — hash-фрагмент пуст');
+          renderStatus('fail', 'Вставьте ссылку из QR-кода: хэш-фрагмент пуст.');
           return;
         }
 
@@ -262,43 +475,165 @@
 
         const separatorIndex = decodedHash.lastIndexOf('.');
         if (separatorIndex === -1) {
-          renderStatus(false, 'Не найден разделитель между payload и подписью');
+          renderStatus('fail', 'Не найден разделитель между полезной нагрузкой и цифровой подписью.');
           return;
         }
 
         const payload = decodedHash.slice(0, separatorIndex);
         const signature = decodedHash.slice(separatorIndex + 1);
 
-        const rootKey = await loadRootKey();
-        rootKeyEl.textContent = rootKey || '—';
+        const keyringMap = await loadKeyring();
 
-        const { version, volumeId, sheetNo, briefingType, date, prevHashShort, participants } =
-          parsePayload(payload);
-        payloadVersionEl.textContent = version;
-        volumeIdEl.textContent = volumeId;
-        sheetNoEl.textContent = sheetNo;
-        briefingTypeEl.textContent = briefingType;
-        sheetDateEl.textContent = date;
-        prevHashEl.textContent = prevHashShort;
-        renderParticipants(participants);
+        currentParsedPayload = parsePayload(payload);
+        const p = currentParsedPayload;
 
-        if (!rootKey) {
-          renderStatus(false, 'Подпись не проверена: нет корневого ключа');
+        const targetKid = p.keyId || 'root';
+        const keyEntry = p.major === 3
+          ? keyringMap.get(targetKid)
+          : keyringMap.get(targetKid) || keyringMap.get('root');
+
+        if (keyEntry) {
+          const statusSuffix =
+            keyEntry.status === 'retired'
+              ? ' (архивирован / retired)'
+              : ' (активен / active)';
+          keyIdEl.textContent = `${keyEntry.kid || targetKid}${statusSuffix}`;
+          rootKeyEl.textContent = keyEntry.public_key_base64 || '—';
+        } else {
+          keyIdEl.textContent = targetKid;
+          rootKeyEl.textContent = '—';
+        }
+
+        payloadVersionEl.textContent = p.version;
+        volumeIdEl.textContent = p.volumeId;
+        sheetNoEl.textContent = p.sheetNo;
+        recordHashEl.textContent = p.recordHash;
+        prevHashEl.textContent = p.prevHash;
+
+        if (p.major === 3) {
+          v2FieldsEl.hidden = true;
+          participantsHintEl.textContent =
+            'В схеме v3 персональные данные исключены из QR-кода (SEC-02). Сверка доступна через канонический снимок выше.';
+          renderParticipants([]);
+        } else {
+          v2FieldsEl.hidden = false;
+          briefingTypeEl.textContent = p.briefingType;
+          sheetDateEl.textContent = p.date;
+          participantsHintEl.textContent = 'Фамилии и инициалы участников из QR-кода (устаревший формат v2).';
+          renderParticipants(p.participants);
+        }
+
+        if (p.versionKind === 'draft') {
+          renderStatus('draft', 'Черновик (draft): лист не утверждён.');
+          return;
+        }
+
+        const verificationPublicKey = keyEntry ? keyEntry.public_key_base64 : '';
+        if (!verificationPublicKey) {
+          renderStatus('fail', `Подпись не проверена: ключ с ID '${targetKid}' отсутствует.`);
           return;
         }
 
         try {
           const signatureBytes = decodeBase64Url(signature);
           const payloadBytes = new TextEncoder().encode(payload);
-          const publicKeyBytes = decodeBase64Url(rootKey);
-          const ok = await ed.verify(signatureBytes, payloadBytes, publicKeyBytes);
-          renderStatus(ok, ok ? 'Подпись верна' : 'Подпись НЕ совпадает');
+          const publicKeyBytes = decodeBase64Url(verificationPublicKey);
+          let ok = await ed.verifyAsync(signatureBytes, payloadBytes, publicKeyBytes);
+
+          // If legacy v2 and primary key didn't match, check historical keys
+          if (!ok && p.major <= 2 && keyringMap.size > 1) {
+            for (const other of keyringMap.values()) {
+              if (other.public_key_base64 !== verificationPublicKey) {
+                const otherPubBytes = decodeBase64Url(other.public_key_base64);
+                if (await ed.verifyAsync(signatureBytes, payloadBytes, otherPubBytes)) {
+                  ok = true;
+                  keyIdEl.textContent = `${other.kid} (архивирован / retired)`;
+                  rootKeyEl.textContent = other.public_key_base64;
+                  break;
+                }
+              }
+            }
+          }
+
+          signatureVerified = ok;
+
+          if (!ok) {
+            renderStatus('fail', 'Ошибка проверки: цифровая подпись не совпадает.');
+            return;
+          }
+
+          if (p.major === 3) {
+            renderStatus(
+              'ok',
+              'Подпись верна (v3). Содержимое листа не подтверждено без канонического снимка.'
+            );
+          } else {
+            renderStatus('ok', 'Подпись верна (v2 legacy). Устаревший формат.');
+          }
         } catch (error) {
           console.error('Verification error', error);
-          renderStatus(false, 'Ошибка при валидации подписи');
+          renderStatus('fail', 'Ошибка при проверке цифровой подписи.');
         }
       }
 
+      async function verifySnapshot() {
+        if (!currentParsedPayload) {
+          snapshotResultEl.innerHTML = '<span style="color:#ff9aa2;">Сначала откройте валидную ссылку с данными QR.</span>';
+          return;
+        }
+
+        const rawJson = snapshotInputEl.value.trim();
+        if (!rawJson) {
+          snapshotResultEl.innerHTML = '<span style="color:#ff9aa2;">Введите или загрузите JSON канонического снимка.</span>';
+          return;
+        }
+
+        let parsed;
+        try {
+          parsed = JSON.parse(rawJson);
+        } catch (err) {
+          snapshotResultEl.innerHTML = `<span style="color:#ff9aa2;">Синтаксическая ошибка JSON: ${err.message}</span>`;
+          return;
+        }
+
+        try {
+          const canonical = canonicalizeJson(parsed);
+          const computedHash = await computeSha256Hex(canonical);
+
+          if (currentParsedPayload.major === 3) {
+            const expectedHash = currentParsedPayload.recordHash.toLowerCase();
+            if (computedHash.toLowerCase() === expectedHash) {
+              snapshotResultEl.innerHTML = `<span style="color:#5ae088; font-weight:600;">✓ Снимок полностью совпадает с record_hash листа: ${computedHash}</span>`;
+              if (signatureVerified) {
+                renderStatus('ok', 'Подпись и канонический снимок подтверждены (v3).');
+              }
+            } else {
+              snapshotResultEl.innerHTML = `<span style="color:#ff9aa2; font-weight:600;">✗ Несовпадение хэша!<br />Вычислен: ${computedHash}<br />В QR-коде: ${expectedHash}</span>`;
+              renderStatus('fail', 'Несовпадение: вычисленный хэш снимка не совпадает с record_hash в QR!');
+            }
+          } else {
+            snapshotResultEl.innerHTML = `<span style="color:#ffd166;">Документ оформлен по устаревшей схеме v2; проверка record_hash применима только для v3.</span>`;
+          }
+        } catch (err) {
+          console.error('Snapshot verification error', err);
+          snapshotResultEl.innerHTML = `<span style="color:#ff9aa2;">Ошибка вычисления хэша: ${err.message}</span>`;
+        }
+      }
+
+      snapshotFileEl.addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          snapshotInputEl.value = e.target.result;
+          verifySnapshot();
+        };
+        reader.readAsText(file);
+      });
+
+      verifySnapshotBtn.addEventListener('click', verifySnapshot);
+
+      window.addEventListener('hashchange', verify);
       verify();
     </script>
   </body>

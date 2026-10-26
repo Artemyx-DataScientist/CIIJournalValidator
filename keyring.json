@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-10-26T20:30:31.2741064+03:00",
+  "keys": [
+    {
+      "kid": "root",
+      "public_key_base64": "Q02ZknlqbAQAxuCKoyEvm-aQlcSZlZcaDCu9Uhbp3yg=",
+      "status": "active",
+      "description": "Default root Ed25519 signing key"
+    },
+    {
+      "kid": "pilot-98f4949d6d4e",
+      "public_key_base64": "XPCa4lmMEkF_DjzpSKrbtQF-rC_VbuMAuZPaHDq2iW8=",
+      "status": "active",
+      "description": "Pilot demo key (pilot-98f4949d6d4e)"
+    }
+  ]
+}

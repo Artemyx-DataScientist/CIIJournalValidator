@@ -1,0 +1,10 @@
+{
+  "payload": "intro_journal:v3|0|0|25e007312895ffdc39085f2511baf931e9c86ac906110bd57a64924dfb76235a|0000000000000000000000000000000000000000000000000000000000000000|pilot-98f4949d6d4e",
+  "signature": "xmcf3Q7CCOMory7Ie85faIi7f3TuP0gEHQW5h7j44U909FtTnTes7jjb7ADQpaNGFRFkpYukU7GkCGMUPVeyAw==",
+  "snapshot": {
+    "simulation": "DEMO",
+    "purpose": "Offline validator self-test only; no instruction event or final journal document"
+  },
+  "unknownKidPayload": "intro_journal:v3|0|0|25e007312895ffdc39085f2511baf931e9c86ac906110bd57a64924dfb76235a|0000000000000000000000000000000000000000000000000000000000000000|unknown-unpublished",
+  "unknownKidSignature": "pkpu-mxhH2ak0BUoRT0oYWpUXau8Jr2F6BdjyWMGopej5pVl3wmmaJgBnv8W71k_AsxjCeL8AtuTkwWbTXmRAg=="
+}

@@ -199,15 +199,15 @@
   </head>
   <body>
     <div class="card">
-      <h1>Проверка QR-журнала</h1>
+      <h1>Проверка QR документа</h1>
       <p class="description">
-        Вставьте или откройте ссылку из QR-кода страницы журнала. Криптографическая подпись проверяется автономно в браузере.
+        Вставьте или откройте ссылку из QR-кода страницы журнала или личной карточки. Криптографическая подпись проверяется автономно в браузере.
       </p>
 
       <div class="legal-notice">
         <h4>Правовые ограничения верификации</h4>
         <ul>
-          <li>Электронная подпись подтверждает целостность цифрового обязательства и порядок в хэш-цепочке тома.</li>
+          <li>Электронная подпись подтверждает целостность цифрового обязательства; для страниц журнала указывается и предыдущий хэш цепочки.</li>
           <li>Проверка НЕ является подтверждением фактического нанесения физических рукописных подписей работников на бумаге.</li>
           <li>Проверка НЕ подтверждает астрономическое время создания листа (доверенный штамп времени TSA не используется).</li>
         </ul>
@@ -227,10 +227,10 @@
         </div>
 
         <div class="info-block">
-          <h3>Данные обязательства листа</h3>
+          <h3 id="commitment-title">Данные обязательства листа</h3>
           <p class="muted">Извлечены из подписанного QR-кода.</p>
           <div class="badge" id="payload-version">—</div>
-          <div class="muted">Том: <strong id="volume-id">—</strong> | Лист: <strong id="sheet-no">—</strong></div>
+          <div class="muted"><span id="volume-label">Том</span>: <strong id="volume-id">—</strong> | <span id="document-label">Лист</span>: <strong id="sheet-no">—</strong></div>
           <div id="v2-fields" class="muted" hidden>
             <div>Тип инструктажа: <strong id="briefing-type">—</strong></div>
             <div>Дата: <strong id="sheet-date">—</strong></div>
@@ -239,7 +239,7 @@
             Хэш записи (record_hash):<br />
             <span id="record-hash" class="code-box-small">—</span>
           </div>
-          <div class="muted" style="margin-top: 0.4rem;">
+          <div id="previous-hash-block" class="muted" style="margin-top: 0.4rem;">
             Хэш предыдущего листа (prev_hash):<br />
             <span id="prev-hash" class="code-box-small">—</span>
           </div>
@@ -391,6 +391,9 @@
       }
 
       function normalizeVersion(version) {
+        if (version === 'personal_card:v3') {
+          return { raw: version, major: 3, kind: 'final' };
+        }
         if (version.startsWith('intro_journal:v3-draft') || version.startsWith('v3-draft')) {
           return { raw: version, major: 3, kind: 'draft' };
         }
@@ -486,6 +489,7 @@
 
         currentParsedPayload = parsePayload(payload);
         const p = currentParsedPayload;
+        const isCard = p.version === 'personal_card:v3';
 
         const targetKid = p.keyId || 'root';
         const keyEntry = p.major === 3
@@ -505,7 +509,11 @@
         }
 
         payloadVersionEl.textContent = p.version;
-        volumeIdEl.textContent = p.volumeId;
+        document.getElementById('commitment-title').textContent = isCard ? 'Данные обязательства карточки' : 'Данные обязательства листа';
+        document.getElementById('volume-label').textContent = isCard ? 'Тип' : 'Том';
+        document.getElementById('document-label').textContent = isCard ? 'ID карточки' : 'Лист';
+        document.getElementById('previous-hash-block').hidden = isCard;
+        volumeIdEl.textContent = isCard ? 'Личная карточка' : p.volumeId;
         sheetNoEl.textContent = p.sheetNo;
         recordHashEl.textContent = p.recordHash;
         prevHashEl.textContent = p.prevHash;
@@ -565,7 +573,7 @@
           if (p.major === 3) {
             renderStatus(
               'ok',
-              'Подпись верна (v3). Содержимое листа не подтверждено без канонического снимка.'
+              `Подпись верна (v3). Содержимое ${isCard ? 'карточки' : 'листа'} не подтверждено без канонического снимка.`
             );
           } else {
             renderStatus('ok', 'Подпись верна (v2 legacy). Устаревший формат.');
@@ -603,7 +611,7 @@
           if (currentParsedPayload.major === 3) {
             const expectedHash = currentParsedPayload.recordHash.toLowerCase();
             if (computedHash.toLowerCase() === expectedHash) {
-              snapshotResultEl.innerHTML = `<span style="color:#5ae088; font-weight:600;">✓ Снимок полностью совпадает с record_hash листа: ${computedHash}</span>`;
+              snapshotResultEl.innerHTML = `<span style="color:#5ae088; font-weight:600;">✓ Снимок полностью совпадает с record_hash документа: ${computedHash}</span>`;
               if (signatureVerified) {
                 renderStatus('ok', 'Подпись и канонический снимок подтверждены (v3).');
               }

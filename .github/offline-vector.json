@@ -6,5 +6,14 @@
     "purpose": "Offline validator self-test only; no instruction event or final journal document"
   },
   "unknownKidPayload": "intro_journal:v3|0|0|25e007312895ffdc39085f2511baf931e9c86ac906110bd57a64924dfb76235a|0000000000000000000000000000000000000000000000000000000000000000|unknown-unpublished",
-  "unknownKidSignature": "pkpu-mxhH2ak0BUoRT0oYWpUXau8Jr2F6BdjyWMGopej5pVl3wmmaJgBnv8W71k_AsxjCeL8AtuTkwWbTXmRAg=="
+  "unknownKidSignature": "pkpu-mxhH2ak0BUoRT0oYWpUXau8Jr2F6BdjyWMGopej5pVl3wmmaJgBnv8W71k_AsxjCeL8AtuTkwWbTXmRAg==",
+  "card": {
+    "payload": "personal_card:v3|0|0|05f2c78d931b257da66a97352cb376fd43567d59475f32717651cce7eb8dc820|0000000000000000000000000000000000000000000000000000000000000000|pilot-98f4949d6d4e",
+    "signature": "CO0GcnPWV3jLuV0JrLMcmt64Zt31LK6KXdAwpCS77K6x3jLpApuQkh33K-dQ6O8gU3662AvfRsfh563wE3WRDQ==",
+    "snapshot": {
+      "simulation": "DEMO",
+      "document": "personal_card",
+      "purpose": "Offline self-test with no workers or instruction"
+    }
+  }
 }

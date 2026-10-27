@@ -99,6 +99,15 @@ jobs:
               await open(vector.unknownKidPayload, vector.unknownKidSignature);
               await expect(page.locator('#status')).toHaveClass(/fail/);
             }
+            assert.ok(vector.card && vector.card.payload.startsWith('personal_card:v3|'),'Missing public synthetic card vector');
+            await open(vector.card.payload, vector.card.signature);
+            await expect(page.locator('#status')).toHaveClass(/ok/);
+            await expect(page.locator('#commitment-title')).toHaveText('Данные обязательства карточки');
+            await expect(page.locator('#document-label')).toHaveText('ID карточки');
+            await expect(page.locator('#previous-hash-block')).toBeHidden();
+            await page.locator('#snapshot-input').fill(JSON.stringify(vector.card.snapshot));
+            await page.locator('#verify-snapshot-btn').click();
+            await expect(page.locator('#snapshot-result')).toContainText('Снимок полностью совпадает');
             assert.equal(external.length,0,'External requests are forbidden');
             assert.deepEqual(errors,[],'Browser errors are forbidden');
             console.log(JSON.stringify({signature:true,snapshot:true,tamperRejected:true,unknownKidRejected:!!vector.unknownKidPayload,externalRequests:external.length}));
